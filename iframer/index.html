@@ -4,7 +4,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
 
 <style>
     :root {
@@ -27,7 +29,10 @@
         padding: 0;
     }
 
-    h1,h2,h3,h4 {
+    h1,
+    h2,
+    h3,
+    h4 {
         margin-top: 0;
         margin-bottom: 1em;
     }
@@ -56,7 +61,7 @@
         .framer {
             grid-template-columns: 2fr 1fr;
         }
-        
+
         .info {
             grid-column: 1;
             grid-row: 1;
@@ -118,7 +123,7 @@
         gap: 0.5em;
     }
 
-    .pinned-container > div {
+    .pinned-container>div {
         display: flex;
         flex-direction: column;
         white-space: nowrap;
@@ -197,8 +202,52 @@
 <div id="app">Loading…</div>
 
 <script type="module">
-    const GITHUB_TOKEN = "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"; // yes here is a token.. Don't worry it has no permissinons for anything
+    const GITHUB_TOKEN = "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"; // yes here is a token.. Don't worry it has no permissinons for anything
     const params = new URLSearchParams(location.search);
+
+    // Set styling variables
+    const THEME_KEYS = [
+        "font-family",
+        "card-border-radius",
+        "color-text",
+        "color-1",
+        "color-2",
+        "color-secondary",
+        "color-background",
+        "color-body-background",
+        "base-font-size",
+    ];
+
+    const rootStyle = document.documentElement.style;
+
+    const needsPx = new Set(["base-font-size", "card-border-radius"]);
+    const isColorKey = (k) => k.startsWith("color-");
+
+    const normalize = (key, val) => {
+        if (!val) return val;
+        // Replace '+' with space for convenience
+        val = val.replace(/\+/g, " ");
+        // Auto-prefix hex colors without '#' for color keys
+        if (isColorKey(key) && /^[0-9a-f]{3,8}$/i.test(val)) {
+            val = "#" + val;
+        }
+        // Auto-append px for numeric sizes
+        if (needsPx.has(key) && /^-?\d+(\.\d+)?$/.test(val)) {
+            val = val + "px";
+        }
+        return val;
+    };
+
+    for (const key of THEME_KEYS) {
+        // Accept either "color-1" or "--color-1" in the URL
+        let val = params.get(key);
+        if (val == null) val = params.get("--" + key);
+        if (val != null && val !== "") {
+            rootStyle.setProperty("--" + key, normalize(key, val));
+        }
+    }
+
+    // Actual github API Code
     const login = params.get("user") || "aalolexx";
     const token = params.get("token") || GITHUB_TOKEN;
 
@@ -305,7 +354,6 @@
             //const recent = days.slice(-14);
 
             const contributions = contributionsByMonthFromCollection(user.contributionsCollection, { fillGaps: true })
-            console.log(contributions)
 
             app.innerHTML = `
             <div class="framer">
@@ -344,7 +392,7 @@
                 <div class="activity">
                     <div class="activity-chart-container">
                         ${contributions.map(c => `
-                            <div class="activity-bar-wrapper">
+                            <div class="activity-bar-wrapper" title="commits in ${c.month}: ${c.total}">
                                 <div class="activity-bar" style="height: ${100 - c.barHeight}%;"></div>
                             </div>
                         `).join("")}
