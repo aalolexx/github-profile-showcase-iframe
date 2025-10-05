@@ -202,7 +202,7 @@
 <div id="app">Loading…</div>
 
 <script type="module">
-    const GITHUB_TOKEN = "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"; // yes here is a token.. Don't worry it has no permissinons for anything
+    const GITHUB_TOKEN = "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"; // yes here is a token.. Don't worry it has no permissinons for anything
     const params = new URLSearchParams(location.search);
 
     // Set styling variables
@@ -284,6 +284,8 @@
         app.textContent = 'Missing token. Add it in the file or via ?token=...';
         throw new Error("No GitHub token provided");
     }
+
+    console.log(token)
 
     async function gql(query, variables) {
         const res = await fetch("https://api.github.com/graphql", {
@@ -384,7 +386,7 @@
                     <div class="pinned-container">
                         ${pins.length ? pins.map(r => `
                         <div>
-                            <a href="${r.url}" target="_blank" rel="noreferrer noopener">${r.name}</a>
+                            <a href="${r.url}" target="_blank" rel="noreferrer noopener" title="${r.name}">${r.name}</a>
                             <span class="repo-lang">${r.primaryLanguage?.name ?? "—"}</span>
                         </div>`).join("") : "<li>None</li>"}
                     </div>

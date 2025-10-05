@@ -1,12 +1,12 @@
 <script setup>
-import { reactive, computed } from "vue";
+import { reactive, computed, onMounted } from "vue";
 import ColorPicker from "./components/ColorPicker.vue";
 
 const form = reactive({
   baseUrl: "https://ehrencreative.de/github-profile-showcase/iframer/",
   username: "aalolexx",
   width: "100%",
-  height: "400",
+  height: "500",
   border: false,
 
   // THEME VARS 
@@ -64,11 +64,14 @@ async function copyCode() {
 
 <template>
   <div class="container py-4">
-    <h1 class="h3 mb-4">Iframe Embed Builder</h1>
+    <h1 class="mb-2">GitHub Profile Card - Iframe Generator</h1>
+    <p class="mb-4">Showcase your GitHub Profile by simply pasting the iframe code to your page.
+      The Iframe will automatically fetch the GitHub API and display your profile informations.
+    </p>
 
-    <form class="row g-3">
+    <form class="row g-3 mb-4">
       <div class="col-md-6">
-        <label class="form-label">Username</label>
+        <label class="form-label"><strong>Your GitHub Username</strong></label>
         <input v-model.lazy="form.username" class="form-control" placeholder="octocat" />
       </div>
 
@@ -83,62 +86,83 @@ async function copyCode() {
       </div>
     </form>
 
-    <h2 class="h6 mb-3">Theme</h2>
+    <div class="accordion accordion-flush mb-4" id="flushAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="flushHeading1">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#flushPanel1" aria-expanded="false" aria-controls="flushPanel1">
+            <span>Configure Look and Feel</span>
+            <span>
+              <div class="preview-color" :style="{'background-color': form.color1}"></div>
+              <div class="preview-color" :style="{'background-color': form.color2}"></div>
+              <div class="preview-color" :style="{'background-color': form.colorText}"></div>
+              <div class="preview-color" :style="{'background-color': form.colorSecondary}"></div>
+              <div class="preview-color" :style="{'background-color': form.colorBackground}"></div>
+              <div class="preview-color" :style="{'background-color': form.colorBodyBackground}"></div>
+            </span>
+          </button>
+        </h2>
+        <div id="flushPanel1" class="accordion-collapse collapse" aria-labelledby="flushHeading1"
+          data-bs-parent="#flushAccordion">
+          <div class="accordion-body">
+            <div class="row g-3">
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Font family</label>
+                <input v-model.lazy="form.fontFamily" class="form-control" placeholder="poppins, arial" />
+              </div>
 
-    <div class="row g-3">
-      <div class="col-12 col-lg-6">
-        <label class="form-label">Font family</label>
-        <input v-model.lazy="form.fontFamily" class="form-control" placeholder="poppins, arial" />
-      </div>
+              <div class="col-6 col-lg-3">
+                <label class="form-label">Base font size</label>
+                <input v-model.lazy="form.baseFontSize" class="form-control" placeholder="15px" />
+              </div>
 
-      <div class="col-6 col-lg-3">
-        <label class="form-label">Base font size</label>
-        <input v-model.lazy="form.baseFontSize" class="form-control" placeholder="15px" />
-      </div>
+              <div class="col-6 col-lg-3">
+                <label class="form-label">Card border radius</label>
+                <input v-model.lazy="form.cardBorderRadius" class="form-control" placeholder="2em" />
+              </div>
 
-      <div class="col-6 col-lg-3">
-        <label class="form-label">Card border radius</label>
-        <input v-model.lazy="form.cardBorderRadius" class="form-control" placeholder="2em" />
-      </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label class="form-label">Text color</label>
+                <ColorPicker v-model.lazy="form.colorText" />
+              </div>
 
-      <div class="col-12 col-md-6 col-lg-2">
-        <label class="form-label">Text color</label>
-        <ColorPicker v-model.lazy="form.colorText" />
-      </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label class="form-label">Primary color 1</label>
+                <ColorPicker v-model.lazy="form.color1" />
+              </div>
 
-      <div class="col-12 col-md-6 col-lg-2">
-        <label class="form-label">Primary color 1</label>
-        <ColorPicker v-model.lazy="form.color1" />
-      </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label class="form-label">Primary color 2</label>
+                <ColorPicker v-model.lazy="form.color2" />
+              </div>
 
-      <div class="col-12 col-md-6 col-lg-2">
-        <label class="form-label">Primary color 2</label>
-        <ColorPicker v-model.lazy="form.color2" />
-      </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label class="form-label">Secondary color</label>
+                <ColorPicker v-model.lazy="form.colorSecondary" />
+              </div>
 
-      <div class="col-12 col-md-6 col-lg-2">
-        <label class="form-label">Secondary color</label>
-        <ColorPicker v-model.lazy="form.colorSecondary" />
-      </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label class="form-label">Card background</label>
+                <ColorPicker v-model.lazy="form.colorBackground" />
+              </div>
 
-      <div class="col-12 col-md-6 col-lg-2">
-        <label class="form-label">Card background</label>
-        <ColorPicker v-model.lazy="form.colorBackground" />
-      </div>
-
-      <div class="col-12 col-md-6 col-lg-2">
-        <label class="form-label">Body background</label>
-        <ColorPicker v-model.lazy="form.colorBodyBackground" />
+              <div class="col-12 col-md-6 col-lg-2">
+                <label class="form-label">Body background</label>
+                <ColorPicker v-model.lazy="form.colorBodyBackground" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <hr class="my-4" />
-
-    <h2 class="h5">iframe code</h2>
+    <p><strong>Iframe code to copy</strong></p>
     <pre class="rounded"><code>{{ embedCode }}</code></pre>
     <!--<div class="col-12 d-flex gap-2">
       <button class="btn btn-primary" @click="copyCode">Copy embed code</button>
     </div>-->
+
+    <h2 class="mb-4">Iframe preview</h2>
 
     <iframe :src="embedSrc" :width="form.width" :height="form.height" :style="iframeStyle" class="w-100"
       referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -169,8 +193,58 @@ async function copyCode() {
   --bs-btn-hover-border-color: #ff6b94;
 }
 
+.accordion-button {
+  border-radius: var(--bs-border-radius) !important;
+  padding: .75rem .75rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.accordion-button span {
+  display: flex;
+  margin-right: 2em;
+}
+
+.accordion-button:hover {
+  color: #ff6b94;
+}
+
+.accordion-button::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+.accordion .accordion-button:not(.collapsed)::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23575df0'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+.accordion-button.collapsed {
+  background-color: #19191e;
+}
+
+.accordion-button:not(.collapsed) {
+  color: #575df0;
+  background-color: #19191e;
+  box-shadow: none !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.preview-color {
+  width: 2em;
+  height: 1em;
+  transition: 0.3s;
+}
+
+.accordion-button:not(.collapsed) .preview-color  {
+  width: 0;
+}
+
+.accordion-body {
+  border: 4px solid #19191e;
+}
+
 .container {
-  max-width: 1080px;
+  max-width: 1180px;
 }
 
 .form-control {
