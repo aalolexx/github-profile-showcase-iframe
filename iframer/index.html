@@ -1,0 +1,363 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>GitHub GraphQL User Summary</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --font-family: poppins, arial;
+        --card-border-radius: 2em;
+        --color-text: #fff;
+        --color-1: #575df0;
+        --color-2: #ff6b94;
+        --color-secondary: #a8b0c0;
+        --color-background: #19191e;
+        --color-body-background: #0d0d0d;
+        --base-font-size: 15px;
+    }
+
+    body {
+        font-size: var(--base-font-size);
+        font-family: var(--font-family);
+        background-color: var(--color-body-background);
+        margin: 0;
+        padding: 0;
+    }
+
+    h1,h2,h3,h4 {
+        margin-top: 0;
+        margin-bottom: 1em;
+    }
+
+    h4 {
+        font-size: 1rem;
+        font-weight: normal;
+    }
+
+    p {
+        margin-top: 0;
+        margin-bottom: 0.5em;
+    }
+
+    .framer {
+        display: grid;
+        grid-template-columns: 3fr 5fr 2fr;
+        gap: 0.5em;
+        background-color: var(--color-background);
+        color: var(--color-text);
+        border-radius: var(--card-border-radius);
+        padding: 3em;
+    }
+
+    @media screen and (max-width: 800px) {
+        .framer {
+            grid-template-columns: 2fr 1fr;
+        }
+        
+        .info {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .pinned {
+            grid-column: 1 / span 2;
+            grid-row: 2;
+        }
+
+        .activity {
+            grid-column: 2;
+            grid-row: 1;
+        }
+    }
+
+    a {
+        color: var(--color-1);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--color-2);
+    }
+
+    .tag {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1em;
+    }
+
+    .tag img {
+        width: 3.5em;
+        height: 3.5em;
+        margin-right: 0.5em;
+    }
+
+    .tag h3 {
+        font-weight: bold;
+        font-size: 1.5em;
+        margin: 0;
+    }
+
+    .tag .meta {
+        opacity: 0.6;
+    }
+
+    .stats {
+        color: var(--color-secondary);
+    }
+
+    .stats strong {
+        color: var(--color-text);
+    }
+
+    .pinned-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5em;
+    }
+
+    .pinned-container > div {
+        display: flex;
+        flex-direction: column;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hiddem;
+        min-width: 0;
+    }
+
+    .pinned-container a {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        display: block;
+    }
+
+    .pinned-container span {
+        color: var(--color-secondary);
+    }
+
+    .activity {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .activity-chart-container {
+        display: flex;
+        flex: 1;
+        align-items: flex-end;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .activity-bar-wrapper {
+        flex: 1;
+        max-width: 1em;
+        position: relative;
+        height: 100%;
+        margin-right: 5px;
+    }
+
+    .activity-bar:last-child {
+        margin-right: 0;
+    }
+
+    .activity-bar-wrapper::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(to top, transparent 0%, var(--color-1) 10%, var(--color-1) 20%, var(--color-2) 100%);
+        z-index: 0;
+    }
+
+    .activity-bar {
+        position: relative;
+        width: 100%;
+        background-color: transparent;
+        z-index: 1;
+        background-color: var(--color-background);
+    }
+
+    .activity-chart-label {
+        width: 100%;
+        display: flex;
+        text-align: center;
+        justify-content: center;
+        color: var(--color-secondary);
+        margin-top: 0.25em;
+        font-size: 0.75em;
+    }
+</style>
+
+<div id="app">Loading…</div>
+
+<script type="module">
+    const GITHUB_TOKEN = "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"; // yes here is a token.. Don't worry it has no permissinons for anything
+    const params = new URLSearchParams(location.search);
+    const login = params.get("user") || "aalolexx";
+    const token = params.get("token") || GITHUB_TOKEN;
+
+    const QUERY = `
+    query($login:String!){
+      rateLimit{remaining resetAt}
+      user(login:$login){
+        login name bio avatarUrl url
+        followers{totalCount} following{totalCount}
+        repositories(privacy: PUBLIC){ totalCount }
+        pinnedItems(first:6){
+          nodes{
+            ... on Repository{
+              name url description stargazerCount forkCount
+              primaryLanguage{ name } updatedAt
+            }
+          }
+        }
+        contributionsCollection{
+          contributionCalendar {
+            totalContributions          # daily calendar total (may include private counts)
+            weeks { contributionDays { date contributionCount } }
+          }
+          totalCommitContributions      # commits in the window
+          restrictedContributionsCount  # # that are private/restricted
+          }
+        }
+      }
+    }`;
+
+    const app = document.getElementById("app");
+
+    if (!token) {
+        app.textContent = 'Missing token. Add it in the file or via ?token=...';
+        throw new Error("No GitHub token provided");
+    }
+
+    async function gql(query, variables) {
+        const res = await fetch("https://api.github.com/graphql", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ query, variables })
+        });
+        const json = await res.json();
+        if (!res.ok || json.errors) throw new Error((json.errors || []).map(e => e.message).join("; ") || res.statusText);
+        return json.data;
+    }
+
+    function flattenDays(weeks) {
+        const days = [];
+        for (const w of weeks) for (const d of w.contributionDays) days.push(d);
+        return days;
+    }
+
+    /**
+   * From user.contributionsCollection -> [{ month: "YYYY-MM", total: number }, ...]
+   * Set { fillGaps:true } to include zero-months between first and last month.
+   */
+    function contributionsByMonthFromCollection(contributionsCollection, { fillGaps = false } = {}) {
+        const weeks = contributionsCollection?.contributionCalendar?.weeks || [];
+        const map = new Map();
+        let minMonth = null, maxMonth = null;
+
+        for (const w of weeks) {
+            for (const d of w.contributionDays || []) {
+                const month = d.date.slice(0, 7); // "YYYY-MM"
+                const cnt = d.contributionCount || 0;
+                map.set(month, (map.get(month) || 0) + cnt);
+                if (!minMonth || month < minMonth) minMonth = month;
+                if (!maxMonth || month > maxMonth) maxMonth = month;
+            }
+        }
+
+        if (!fillGaps) {
+            return Array.from(map.keys()).sort().map(m => ({ month: m, total: map.get(m) }));
+        }
+
+        if (!minMonth) return []; // no data
+        const [sy, sm] = minMonth.split("-").map(Number);
+        const [ey, em] = maxMonth.split("-").map(Number);
+        let y = sy, m = sm;
+        let maxActivity = 0
+        const out = [];
+        while (y < ey || (y === ey && m <= em)) {
+            const key = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}`;
+            out.push({ month: key, total: map.get(key) || 0 });
+            m++; if (m > 12) { m = 1; y++; }
+            if (map.get(key) > maxActivity) maxActivity = map.get(key)
+        }
+        for (let entry of out) {
+            entry["barHeight"] = Math.round(100 / maxActivity * entry.total)
+        }
+        return out;
+    }
+
+
+    (async () => {
+        try {
+            const { user, rateLimit } = await gql(QUERY, { login });
+            if (!user) { app.textContent = `User "${login}" not found.`; return; }
+
+            const pins = (user.pinnedItems?.nodes || []).filter(Boolean);
+            //const days = flattenDays(user.contributionsCollection.contributionCalendar.weeks);
+            //const recent = days.slice(-14);
+
+            const contributions = contributionsByMonthFromCollection(user.contributionsCollection, { fillGaps: true })
+            console.log(contributions)
+
+            app.innerHTML = `
+            <div class="framer">
+                <div class="info">
+                    <div class="tag">
+                        <img src="${user.avatarUrl}" style="border-radius:50%">
+                        <div>
+                            <h3>
+                                <!--<span class="meta">@</span>-->
+                                ${user.login}
+                            </h3>
+                            <span>${user.name ? `${user.name} ` : ""}</span>
+                        </div>
+                    </div>
+                    
+                    <p>${user.bio ?? ""}</p>
+                    <div class="stats">
+                        <p>
+                            Followers: <strong>${user.followers.totalCount}</strong>
+                            <!--· Following: <strong>${user.following.totalCount}</strong>-->
+                            · Public repos: <strong>${user.repositories.totalCount}</strong>
+                        </p>
+                        <p>Contributions last Year: <strong>${user.contributionsCollection.contributionCalendar.totalContributions}</strong></p>
+                    </div>
+                </div>
+                <div class="pinned">
+                    <h4>Pinned Repos</h4>
+                    <div class="pinned-container">
+                        ${pins.length ? pins.map(r => `
+                        <div>
+                            <a href="${r.url}" target="_blank" rel="noreferrer noopener">${r.name}</a>
+                            <span class="repo-lang">${r.primaryLanguage?.name ?? "—"}</span>
+                        </div>`).join("") : "<li>None</li>"}
+                    </div>
+                </div>
+                <div class="activity">
+                    <div class="activity-chart-container">
+                        ${contributions.map(c => `
+                            <div class="activity-bar-wrapper">
+                                <div class="activity-bar" style="height: ${100 - c.barHeight}%;"></div>
+                            </div>
+                        `).join("")}
+                    </div>
+                    <div class="activity-chart-label">
+                        <span>monthly commits last year</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        } catch (e) {
+            app.innerHTML = `<pre style="color:#b00">Error: ${e.message}</pre>`;
+            console.error(e);
+        }
+    })();
+</script>
