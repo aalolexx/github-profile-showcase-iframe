@@ -17,14 +17,13 @@
         --color-2: #ff6b94;
         --color-secondary: #a8b0c0;
         --color-background: #19191e;
-        --color-body-background: #0d0d0d;
         --base-font-size: 15px;
     }
 
     body {
         font-size: var(--base-font-size);
         font-family: var(--font-family);
-        background-color: var(--color-body-background);
+        background-color: transparent;
         margin: 0;
         padding: 0;
     }
@@ -49,12 +48,32 @@
 
     .framer {
         display: grid;
-        grid-template-columns: 3fr 5fr 2fr;
         gap: 0.5em;
+        grid-template-columns: 1fr;
         background-color: var(--color-background);
         color: var(--color-text);
         border-radius: var(--card-border-radius);
         padding: 3em;
+    }
+
+    .framer.show-pinned.show-chart {
+        grid-template-columns: 3fr 5fr 2fr;
+    }
+
+    .framer.show-pinned:not(.show-chart) {
+        grid-template-columns: 1fr 2fr;
+    }
+
+    .framer.show-chart:not(.show-pinned) {
+        grid-template-columns: 2fr 1fr;
+    }
+
+    .framer:not(.show-chart) .activity {
+        display: none;
+    }
+
+    .framer:not(.show-pinned) .pinned {
+        display: none;
     }
 
     @media screen and (max-width: 800px) {
@@ -111,10 +130,15 @@
 
     .stats {
         color: var(--color-secondary);
+        display: flex;
     }
 
     .stats strong {
         color: var(--color-text);
+    }
+
+    .stats span {
+        flex-wrap: nowrap;
     }
 
     .pinned-container {
@@ -202,7 +226,7 @@
 <div id="app">Loading…</div>
 
 <script type="module">
-    const GITHUB_TOKEN = "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"; // yes here is a token.. Don't worry it has no permissinons for anything
+    const GITHUB_TOKEN = "PASTE"; // yes here is a token.. Don't worry it has no permissinons for anything
     const params = new URLSearchParams(location.search);
 
     // Set styling variables
@@ -214,7 +238,6 @@
         "color-2",
         "color-secondary",
         "color-background",
-        "color-body-background",
         "base-font-size",
     ];
 
@@ -250,12 +273,14 @@
     // Actual github API Code
     const login = params.get("user") || "aalolexx";
     const token = params.get("token") || GITHUB_TOKEN;
+    const showPinned = params.get("hide-pinned") === 'true' ? false : true;
+    const showChart = params.get("hide-chart") === 'true' ? false : true;
 
     const QUERY = `
     query($login:String!){
       rateLimit{remaining resetAt}
       user(login:$login){
-        login name bio avatarUrl url
+        login name bio avatarUrl url createdAt
         followers{totalCount} following{totalCount}
         repositories(privacy: PUBLIC){ totalCount }
         pinnedItems(first:6){
@@ -358,27 +383,32 @@
             const contributions = contributionsByMonthFromCollection(user.contributionsCollection, { fillGaps: true })
 
             app.innerHTML = `
-            <div class="framer">
+            <div class="framer ${showPinned ? 'show-pinned' : ''} ${showChart ? 'show-chart' : ''}">
                 <div class="info">
                     <div class="tag">
                         <img src="${user.avatarUrl}" style="border-radius:50%">
                         <div>
                             <h3>
                                 <!--<span class="meta">@</span>-->
+                                <span class="icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/>
+                                    </svg>
+                                </span>
                                 ${user.login}
                             </h3>
                             <span>${user.name ? `${user.name} ` : ""}</span>
                         </div>
                     </div>
-                    
                     <p>${user.bio ?? ""}</p>
                     <div class="stats">
                         <p>
-                            Followers: <strong>${user.followers.totalCount}</strong>
+                            <span>Active since: <strong>${new Date(user.createdAt).toLocaleDateString()}</strong> ·</span>
+                            <span>Followers: <strong>${user.followers.totalCount}</strong> ·</span>
                             <!--· Following: <strong>${user.following.totalCount}</strong>-->
-                            · Public repos: <strong>${user.repositories.totalCount}</strong>
+                            <span>Public repos: <strong>${user.repositories.totalCount}</strong> ·</span>
+                            <span style="display: inline-flex; flex-wrap: nowrap;">Contributions last Year: <strong>${user.contributionsCollection.contributionCalendar.totalContributions}</strong></span>
                         </p>
-                        <p>Contributions last Year: <strong>${user.contributionsCollection.contributionCalendar.totalContributions}</strong></p>
                     </div>
                 </div>
                 <div class="pinned">

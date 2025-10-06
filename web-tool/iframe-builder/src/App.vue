@@ -8,6 +8,8 @@ const form = reactive({
   width: "100%",
   height: "500",
   border: false,
+  hideChart: false,
+  hidePinned: false,
 
   // THEME VARS 
   fontFamily: "poppins, arial",
@@ -17,7 +19,6 @@ const form = reactive({
   color2: "#ff6b94",
   colorSecondary: "#a8b0c0",
   colorBackground: "#19191e",
-  colorBodyBackground: "#0d0d0d",
   baseFontSize: "15px",
 });
 
@@ -27,6 +28,8 @@ function safeUrl(base) {
 }
 
 const themeParamMap = {
+  "hide-chart": () => form.hideChart,
+  "hide-pinned": () => form.hidePinned,
   "font-family": () => form.fontFamily,
   "card-border-radius": () => form.cardBorderRadius,
   "color-text": () => form.colorText,
@@ -34,7 +37,6 @@ const themeParamMap = {
   "color-2": () => form.color2,
   "color-secondary": () => form.colorSecondary,
   "color-background": () => form.colorBackground,
-  "color-body-background": () => form.colorBodyBackground,
   "base-font-size": () => form.baseFontSize,
 };
 
@@ -64,91 +66,110 @@ async function copyCode() {
 
 <template>
   <div class="container py-4">
-    <h1 class="mb-2">GitHub Profile Card - Iframe Generator</h1>
-    <p class="mb-4">Showcase your GitHub Profile by simply pasting the iframe code to your page.
-      The Iframe will automatically fetch the GitHub API and display your profile informations.
-    </p>
+    <div class="row">
+      <h1 class="mb-2">GitHub Profile Card - Iframe Generator</h1>
+      <p class="mb-2">
+        Showcase your GitHub Profile by simply pasting the iframe code to your page.
+        The Iframe will automatically fetch the GitHub API and display your profile informations.
+      </p>
+      <p class="mb-4">This tool is still in alpha state! Fell free to contribute or tell me what to improve <a href="https://github.com/aalolexx/github-profile-showcase-iframe/issues" target="_blank">here</a></p>
+    </div>
 
-    <form class="row g-3 mb-4">
+    <form class="row mb-4">
       <div class="col-md-6">
         <label class="form-label"><strong>Your GitHub Username</strong></label>
         <input v-model.lazy="form.username" class="form-control" placeholder="octocat" />
       </div>
 
       <div class="col-md-3">
-        <label class="form-label">Width</label>
+        <label class="form-label">Iframe Width</label>
         <input v-model.lazy="form.width" class="form-control" placeholder="100%" />
       </div>
 
       <div class="col-md-3">
-        <label class="form-label">Height</label>
+        <label class="form-label">Iframe Height</label>
         <input v-model.lazy="form.height" class="form-control" placeholder="700" />
       </div>
     </form>
 
-    <div class="accordion accordion-flush mb-4" id="flushAccordion">
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="flushHeading1">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-            data-bs-target="#flushPanel1" aria-expanded="false" aria-controls="flushPanel1">
-            <span>Configure Look and Feel</span>
-            <span>
-              <div class="preview-color" :style="{'background-color': form.color1}"></div>
-              <div class="preview-color" :style="{'background-color': form.color2}"></div>
-              <div class="preview-color" :style="{'background-color': form.colorText}"></div>
-              <div class="preview-color" :style="{'background-color': form.colorSecondary}"></div>
-              <div class="preview-color" :style="{'background-color': form.colorBackground}"></div>
-              <div class="preview-color" :style="{'background-color': form.colorBodyBackground}"></div>
-            </span>
-          </button>
-        </h2>
-        <div id="flushPanel1" class="accordion-collapse collapse" aria-labelledby="flushHeading1"
-          data-bs-parent="#flushAccordion">
-          <div class="accordion-body">
-            <div class="row g-3">
-              <div class="col-12 col-lg-6">
-                <label class="form-label">Font family</label>
-                <input v-model.lazy="form.fontFamily" class="form-control" placeholder="poppins, arial" />
-              </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="accordion accordion-flush mb-4" id="flushAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="flushHeading1">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#flushPanel1" aria-expanded="false" aria-controls="flushPanel1">
+                <span>Configure Look and Feel</span>
+                <span>
+                  <div class="preview-color" :style="{'background-color': form.colorBackground}"></div>
+                  <div class="preview-color" :style="{'background-color': form.color1}"></div>
+                  <div class="preview-color" :style="{'background-color': form.color2}"></div>
+                  <div class="preview-color" :style="{'background-color': form.colorText}"></div>
+                  <div class="preview-color" :style="{'background-color': form.colorSecondary}"></div>
+                </span>
+                <span class="layout-settings">
+                  <span>{{ form.hidePinned ? 'hide' : 'show'}} pinned</span>
+                  <span>{{ form.hideChart ? 'hide' : 'show' }} activity</span>
+                </span>
+              </button>
+            </h2>
+            <div id="flushPanel1" class="accordion-collapse collapse" aria-labelledby="flushHeading1"
+              data-bs-parent="#flushAccordion">
+              <div class="accordion-body">
+                <div class="row mb-3">
+                  <div class="col">
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" id="hideChart" v-model="form.hideChart">
+                      <label class="form-check-label" for="hideChart">Hide contributions chart</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" id="hidePinned" v-model="form.hidePinned">
+                      <label class="form-check-label" for="hidePinned">Hide pinned repositories</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-12 col-lg-6">
+                    <label class="form-label">Font family</label>
+                    <input v-model.lazy="form.fontFamily" class="form-control" placeholder="poppins, arial" />
+                  </div>
 
-              <div class="col-6 col-lg-3">
-                <label class="form-label">Base font size</label>
-                <input v-model.lazy="form.baseFontSize" class="form-control" placeholder="15px" />
-              </div>
+                  <div class="col-6 col-lg-3">
+                    <label class="form-label">Base font size</label>
+                    <input v-model.lazy="form.baseFontSize" class="form-control" placeholder="15px" />
+                  </div>
 
-              <div class="col-6 col-lg-3">
-                <label class="form-label">Card border radius</label>
-                <input v-model.lazy="form.cardBorderRadius" class="form-control" placeholder="2em" />
-              </div>
+                  <div class="col-6 col-lg-3">
+                    <label class="form-label">Card border radius</label>
+                    <input v-model.lazy="form.cardBorderRadius" class="form-control" placeholder="2em" />
+                  </div>
+                </div>
+                <div class="d-flex color-pickers">
+                  <div class="">
+                    <label class="form-label">Text color</label>
+                    <ColorPicker v-model.lazy="form.colorText" />
+                  </div>
 
-              <div class="col-12 col-md-6 col-lg-2">
-                <label class="form-label">Text color</label>
-                <ColorPicker v-model.lazy="form.colorText" />
-              </div>
+                  <div class="">
+                    <label class="form-label">Primary color 1</label>
+                    <ColorPicker v-model.lazy="form.color1" />
+                  </div>
 
-              <div class="col-12 col-md-6 col-lg-2">
-                <label class="form-label">Primary color 1</label>
-                <ColorPicker v-model.lazy="form.color1" />
-              </div>
+                  <div class="">
+                    <label class="form-label">Primary color 2</label>
+                    <ColorPicker v-model.lazy="form.color2" />
+                  </div>
 
-              <div class="col-12 col-md-6 col-lg-2">
-                <label class="form-label">Primary color 2</label>
-                <ColorPicker v-model.lazy="form.color2" />
-              </div>
+                  <div class="">
+                    <label class="form-label">Secondary color</label>
+                    <ColorPicker v-model.lazy="form.colorSecondary" />
+                  </div>
 
-              <div class="col-12 col-md-6 col-lg-2">
-                <label class="form-label">Secondary color</label>
-                <ColorPicker v-model.lazy="form.colorSecondary" />
-              </div>
-
-              <div class="col-12 col-md-6 col-lg-2">
-                <label class="form-label">Card background</label>
-                <ColorPicker v-model.lazy="form.colorBackground" />
-              </div>
-
-              <div class="col-12 col-md-6 col-lg-2">
-                <label class="form-label">Body background</label>
-                <ColorPicker v-model.lazy="form.colorBodyBackground" />
+                  <div class="">
+                    <label class="form-label">Card background</label>
+                    <ColorPicker v-model.lazy="form.colorBackground" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -164,7 +185,7 @@ async function copyCode() {
 
     <h2 class="mb-4">Iframe preview</h2>
 
-    <iframe :src="embedSrc" :width="form.width" :height="form.height" :style="iframeStyle" class="w-100"
+    <iframe :src="embedSrc" :width="form.width" :height="form.height" :style="iframeStyle"
       referrerpolicy="no-referrer-when-downgrade"></iframe>
   </div>
 </template>
@@ -191,6 +212,11 @@ async function copyCode() {
   --bs-btn-border-color: var(--bs-primary);
   --bs-btn-hover-bg: #ff6b94;
   --bs-btn-hover-border-color: #ff6b94;
+}
+
+a {
+  color: #575df0;
+  text-decoration: none;
 }
 
 .accordion-button {
@@ -235,8 +261,24 @@ async function copyCode() {
   transition: 0.3s;
 }
 
+.color-pickers > div {
+  margin-right: 0.5em;
+}
+
+.color-pickers > div:last-child {
+  margin-right: 0;
+}
+
 .accordion-button:not(.collapsed) .preview-color  {
   width: 0;
+}
+
+.layout-settings {
+  opacity: 0.5;
+}
+
+.accordion-button:not(.collapsed) .layout-settings  {
+  opacity: 0;
 }
 
 .accordion-body {
